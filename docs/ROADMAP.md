@@ -7,9 +7,12 @@ It outlines phases from a minimal MVP to a robust agentic AI platform aligned wi
 
 # 📍 Phase 0 — Foundation (Current)
 
+<!-- 🚧 Currently being implemented - See TODO.md for detailed task breakdown -->
+
 **Goal:** Establish a minimal but complete agentic workflow.
 
 ### Deliverables
+
 - Multi-agent pipeline (Classifier → Retriever → Writer → Guard → Logger)
 - Supabase pgvector knowledge base
 - Simple FastAPI backend
@@ -28,17 +31,20 @@ It outlines phases from a minimal MVP to a robust agentic AI platform aligned wi
 **Goal:** Improve robustness, reliability, configurability.
 
 ### Backend
+
 - Add retries + timeout handling for agent steps
 - Add configurable prompts per agent
 - Add structured error responses
 - Add better logging (structured logs)
 
 ### Frontend
+
 - Improve UI/UX
 - Better trace visualization (timeline / step cards)
 - Highlight which KB snippets were used
 
 ### Knowledge Base
+
 - Add small UI to view KB entries
 - Add ability to disable low-scoring snippets (RAG+ threshold tuning)
 
@@ -51,12 +57,14 @@ It outlines phases from a minimal MVP to a robust agentic AI platform aligned wi
 **Goal:** Improve retrieval quality and context grounding.
 
 ### Retrieval Improvements
+
 - Add semantic reranking step (LLM or scoring model)
 - Add document prioritization (policies > FAQ > long texts)
 - Add answer verification agent
 - Add “reference checking” prompt to detect hallucinations
 
 ### KB Improvements
+
 - Add multi-field embeddings (title + content)
 - Auto-tagging suggestions
 - Embedding versioning
@@ -70,12 +78,14 @@ It outlines phases from a minimal MVP to a robust agentic AI platform aligned wi
 **Goal:** Expand safety, correctness, and compliance.
 
 ### Guardrails Engine
+
 - Add schema validators using Guardrails AI
 - Add policy checks (e.g., never offer refunds over X €)
 - Add profanity check, PII detection
 - Add “red flag” warnings in UI
 
 ### Multi-step Guard Agent Flow
+
 - If guard fails → auto-revision loop with writer agent
 - Add audit log for safety events
 
@@ -88,6 +98,7 @@ It outlines phases from a minimal MVP to a robust agentic AI platform aligned wi
 **Goal:** Measure quality, reliability, and cost.
 
 ### Observability
+
 - Integrate with Phoenix or Langfuse
 - Add spans for each agent step
 - Capture:
@@ -97,6 +108,7 @@ It outlines phases from a minimal MVP to a robust agentic AI platform aligned wi
   - failure rate per agent
 
 ### Evaluation
+
 - Create a dataset of synthetic support tickets
 - Add evaluation pipeline:
   - correctness
@@ -105,6 +117,7 @@ It outlines phases from a minimal MVP to a robust agentic AI platform aligned wi
   - hallucination rate
 
 ### Reporting
+
 - Add simple dashboard: “System Health & Quality”
 
 **Outcome:** A measurable and improvable system.
@@ -116,6 +129,7 @@ It outlines phases from a minimal MVP to a robust agentic AI platform aligned wi
 **Goal:** Expand agent capabilities.
 
 ### Features
+
 - Multiple specialized writer agents (e.g., “refund expert”, “tech support”)
 - Router agent to pick correct sub-agent
 - Agent-to-agent communication via structured messages
@@ -131,10 +145,12 @@ It outlines phases from a minimal MVP to a robust agentic AI platform aligned wi
 **Goal:** Make the system feel alive.
 
 ### Backend
+
 - Convert `/process` to Server-Sent Events (SSE) or WebSockets
 - Stream: tokens, agent-step events, partial trace
 
 ### Frontend
+
 - Real-time token streaming
 - “Agent is thinking…” animations
 - Live agent step indicators
@@ -148,11 +164,13 @@ It outlines phases from a minimal MVP to a robust agentic AI platform aligned wi
 **Goal:** Increase usefulness & domain coverage.
 
 ### Knowledge Editor
+
 - Add full KB CRUD UI
 - Import/export KB entries
 - Tagging, categorization, versioning
 
 ### Multi-modal
+
 - Allow attachment of:
   - screenshots (OCR)
   - PDFs
@@ -167,6 +185,7 @@ It outlines phases from a minimal MVP to a robust agentic AI platform aligned wi
 **Goal:** Prepare system for real deployments.
 
 ### Features
+
 - User accounts & roles (agent vs admin)
 - Team workspaces
 - Shared KB spaces
@@ -182,14 +201,13 @@ It outlines phases from a minimal MVP to a robust agentic AI platform aligned wi
 
 A fully-featured **Agentic Support Platform**:
 
-- Multi-agent orchestration  
-- RAG+ with verifiable grounding  
-- Guardrails & safety engines  
-- Rich observability & eval suite  
-- Real-time UX  
-- Multi-modal inputs  
-- Extensible via tools & MCP  
-- Configurable by domain (industry templates)  
+- Multi-agent orchestration
+- RAG+ with verifiable grounding
+- Guardrails & safety engines
+- Rich observability & eval suite
+- Real-time UX
+- Multi-modal inputs
+- Extensible via tools & MCP
+- Configurable by domain (industry templates)
 
 A showcase-level project demonstrating cutting-edge AI engineering.
-
