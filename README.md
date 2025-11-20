@@ -17,11 +17,13 @@ task setup-supabase    # Configures Supabase project and knowledge base
 task start    # Starts both backend and frontend
 ```
 
-That's it! Your agentic support system will be running at:
+That's it! Your development environment will be ready. Note: The full agentic system is still under development - see TODO.md for current progress.
 
-- **Frontend**: http://localhost:3000
-- **API**: http://localhost:8000
-- **API Docs**: http://localhost:8000/docs
+**Current Status:**
+
+- ✅ Infrastructure & Knowledge Base: Ready
+- 🚧 Multi-Agent Pipeline: In Development
+- 🚧 API Backend & Frontend: In Development
 
 ---
 
