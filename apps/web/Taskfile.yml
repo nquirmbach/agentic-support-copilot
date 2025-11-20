@@ -1,0 +1,70 @@
+version: "3"
+
+tasks:
+  default:
+    desc: List all available tasks
+    cmds:
+      - task --list
+
+  start:
+    desc: Start the React development server
+    cmds:
+      - npm run dev
+
+  dev:
+    desc: Start in development mode with hot reload
+    cmds:
+      - npm run dev
+
+  build:
+    desc: Build the React application for production
+    cmds:
+      - npm run build
+
+  preview:
+    desc: Preview the production build
+    cmds:
+      - npm run preview
+
+  setup:
+    desc: Install Node.js dependencies
+    cmds:
+      - echo "🔧 Checking Node.js availability..."
+      - |
+        if ! command -v node &> /dev/null; then
+          echo "❌ Error: Node.js is required but not installed"
+          echo "Please install it from: https://nodejs.org/"
+          exit 1
+        fi
+        node_version=$(node --version)
+        echo "✅ Node.js $node_version found"
+      - echo "📚 Installing Node.js dependencies..."
+      - npm install
+
+  test:
+    desc: Run tests
+    cmds:
+      - npm run test
+
+  lint:
+    desc: Run linting and formatting
+    cmds:
+      - npm run lint
+      - npm run format
+
+  type-check:
+    desc: Run TypeScript type checking
+    cmds:
+      - npm run type-check
+
+  clean:
+    desc: Clean generated files
+    cmds:
+      - rm -rf node_modules
+      - rm -rf dist
+      - rm -rf .vite
+
+  stop:
+    desc: Stop the development server
+    cmds:
+      - pkill -f "vite\|npm run dev" || echo "No frontend process found"

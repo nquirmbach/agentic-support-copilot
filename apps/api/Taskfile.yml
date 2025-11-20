@@ -1,0 +1,96 @@
+version: "3"
+
+tasks:
+  default:
+    desc: List all available tasks
+    cmds:
+      - task --list
+
+  start:
+    desc: Start the FastAPI server with hot reload
+    cmds:
+      - .venv/bin/python -m uvicorn src.main:app --reload --host 0.0.0.0 --port 8000
+
+  dev:
+    desc: Start in development mode with verbose logging
+    cmds:
+      - .venv/bin/python -m uvicorn src.main:app --reload --host 0.0.0.0 --port 8000 --log-level debug
+
+  prod:
+    desc: Start in production mode
+    cmds:
+      - .venv/bin/python -m uvicorn src.main:app --host 0.0.0.0 --port 8000 --workers 4
+
+  health:
+    desc: Check API health status
+    cmds:
+      - curl -f http://localhost:8000/health || echo "API is not running"
+
+  docs:
+    desc: Open API documentation in browser
+    cmds:
+      - open http://localhost:8000/docs
+
+  seed-kb:
+    desc: Set up Supabase knowledge base with sample articles
+    cmds:
+      - echo "🚀 Setting up Supabase Knowledge Base..."
+      - python scripts/setup_knowledge_base.py
+
+  test-kb:
+    desc: Test vector search functionality
+    cmds:
+      - echo "🧪 Testing knowledge base..."
+      - python scripts/test_knowledge_base.py
+
+  clean-kb:
+    desc: Clean all documents from knowledge base
+    cmds:
+      - echo "🧹 Cleaning knowledge base..."
+      - python scripts/clean_knowledge_base.py
+
+  setup:
+    desc: Setup Python virtual environment and install dependencies
+    cmds:
+      - echo "🔧 Checking Python 3.11+ availability..."
+      - |
+        python_version=$(python3 --version 2>&1 | sed 's/Python //g' | cut -d' ' -f1 | cut -d'.' -f1,2)
+        required_version="3.11"
+        if [ "$(printf '%s\n' "$required_version" "$python_version" | sort -V | head -n1)" != "$required_version" ]; then
+          echo "❌ Error: Python 3.11+ is required. Found version: $python_version"
+          exit 1
+        fi
+        echo "✅ Python $python_version meets requirements"
+      - |
+        if [ ! -d ".venv" ]; then
+          echo "🔧 Creating Python virtual environment..."
+          python3 -m venv .venv
+        else
+          echo "✅ Virtual environment already exists"
+        fi
+      - echo "📚 Installing Python dependencies..."
+      - .venv/bin/python -m pip install -e ".[dev]"
+      - echo "📝 Copying environment variables from root .env..."
+      - |
+        if [ -f "../../.env" ]; then
+          cp "../../.env" ".env"
+          echo "✅ Environment variables copied to apps/api/.env"
+        else
+          echo "⚠️  Root .env not found. Please run 'task setup-infra' and 'task setup-supabase' first."
+        fi
+
+  test:
+    desc: Run tests
+    cmds:
+      - .venv/bin/python -m pytest
+
+  lint:
+    desc: Run linting
+    cmds:
+      - .venv/bin/python -m ruff check src/
+      - .venv/bin/python -m ruff format src/
+
+  stop:
+    desc: Stop the FastAPI server
+    cmds:
+      - pkill -f "uvicorn src.main:app" || echo "No uvicorn process found"

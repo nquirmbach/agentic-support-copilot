@@ -1,5 +1,5 @@
 ---
-description: Plan a new feature
+description: Plan a new phase implementation
 auto_execution_mode: 1
 ---
 

@@ -1,0 +1,184 @@
+version: "3"
+
+tasks:
+  default:
+    desc: List all available tasks
+    cmds:
+      - task --list
+
+  start:
+    desc: Start both backend API and frontend
+    deps: [start-api, start-web]
+    parallel: true
+    cmds:
+      - echo "Starting Agentic Support Copilot..."
+      - echo "Backend - API at http://localhost:8000"
+      - echo "Frontend - Web at http://localhost:3000"
+      - echo "Both services started"
+
+  start-api:
+    desc: Start the FastAPI backend
+    dir: apps/api
+    cmds:
+      - task start
+
+  start-web:
+    desc: Start the React frontend
+    dir: apps/web
+    cmds:
+      - task start
+
+  setup:
+    desc: Setup all dependencies for the project
+    cmds:
+      - echo "📦 Setting up Agentic Support Copilot..."
+      - task: setup-infra
+      - task: setup-supabase
+      - task: setup-api
+      - task: setup-web
+      - task: seed-kb
+
+  setup-supabase:
+    desc: Interactive Supabase project setup and configuration
+    dir: supabase
+    cmds:
+      - echo "🚀 Starting Supabase Project Setup..."
+      - task setup
+
+  seed-kb:
+    desc: Seed Supabase knowledge base with sample articles
+    dir: apps/api
+    cmds:
+      - echo "📚 Seeding knowledge base with sample articles..."
+      - python scripts/setup_knowledge_base.py
+
+  setup-api:
+    desc: Setup Python backend dependencies and copy environment variables
+    dir: apps/api
+    cmds:
+      - echo "🔧 Setting up Python backend..."
+      - task setup
+
+  setup-web:
+    desc: Setup Node.js frontend dependencies
+    dir: apps/web
+    cmds:
+      - echo "🔧 Setting up Node.js frontend..."
+      - task setup
+
+  setup-infra:
+    desc: Deploy Azure infrastructure and configure environment variables
+    dir: infra/azure
+    cmds:
+      - echo "🏗️ Setting up Azure infrastructure..."
+      - task setup
+      - echo ""
+      - echo "📝 Configuring environment variables..."
+      - terraform output -json > /tmp/terraform_output.json
+      - |
+        # Extract environment variables from Terraform output to root .env
+        cat /tmp/terraform_output.json | jq -r '.environment_variables.value | to_entries[] | "\(.key)=\(.value)"' > ../../.env
+      - rm -f /tmp/terraform_output.json
+      - echo "✅ Azure infrastructure deployed and environment variables configured in .env"
+
+  stop:
+    desc: Stop all running services
+    cmds:
+      - echo "🛑 Stopping all services..."
+      - task: stop-api
+      - task: stop-web
+
+  stop-api:
+    desc: Stop the FastAPI backend
+    dir: apps/api
+    cmds:
+      - task stop
+
+  stop-web:
+    desc: Stop the React frontend
+    cmds:
+      - pkill -f "vite\|npm run dev" || echo "No frontend process found"
+
+  health:
+    desc: Check health of all services
+    cmds:
+      - echo "🏥 Checking service health..."
+      - task: health-api
+      - task: health-web
+
+  health-api:
+    desc: Check API health
+    cmds:
+      - curl -f http://localhost:8000/health && echo "✅ API is healthy" || echo "❌ API is not responding"
+
+  health-web:
+    desc: Check frontend health
+    cmds:
+      - curl -f http://localhost:3000 > /dev/null 2>&1 && echo "✅ Frontend is running" || echo "❌ Frontend is not responding"
+
+  dev:
+    desc: Start all apps in development mode with debug logging
+    cmds:
+      - echo "🐛 Starting in development mode..."
+      - task: dev-api
+      - task: start-web
+
+  dev-api:
+    desc: Start API in development mode
+    dir: apps/api
+    cmds:
+      - task dev
+
+  docs:
+    desc: Open documentation for all services
+    cmds:
+      - echo "📚 Opening documentation..."
+      - open http://localhost:8000/docs
+      - open http://localhost:3000
+
+  clean:
+    desc: Clean all generated files and dependencies
+    cmds:
+      - echo "🧹 Cleaning project..."
+      - task: clean-api
+      - task: clean-web
+      - task: clean-infra
+
+  clean-api:
+    desc: Clean Python backend
+    dir: apps/api
+    cmds:
+      - task clean
+
+  clean-web:
+    desc: Clean Node.js frontend
+    dir: apps/web
+    cmds:
+      - task clean
+
+  clean-infra:
+    desc: Clean Terraform infrastructure
+    dir: infra/azure
+    cmds:
+      - task clean
+
+  logs:
+    desc: Show logs for all services
+    cmds:
+      - echo "📋 Recent logs:"
+      - echo "Backend logs:"
+      - task: logs-api
+      - echo "Frontend logs:"
+      - task: logs-web
+
+  logs-api:
+    desc: Show API logs
+    dir: apps/api
+    cmds:
+      - task logs
+
+  logs-web:
+    desc: Show frontend logs
+    dir: apps/web
+    cmds:
+      - task logs

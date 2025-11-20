@@ -37,7 +37,7 @@ Agents must generate and maintain code in this structure:
 ├─ apps/
 │  ├─ web/            # Vite + React frontend
 │  └─ api/            # FastAPI backend (agent orchestration)
-├─ infra/             # Local dev scripts (optional)
+├─ infra/             # Azure infrastructure with Terraform & Taskfiles
 ├─ docs/              # Documentation
 │  ├─ CONTEXT.md      # Business & product context
 │  └─ ROADMAP.md      # Project roadmap
