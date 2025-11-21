@@ -34,8 +34,8 @@ During this process you will:
 **Current Status:**
 
 - ✅ Infrastructure & Knowledge Base: Ready
-- 🚧 Multi-Agent Pipeline: In Development
-- 🚧 API Backend & Frontend: In Development
+- ✅ Multi-Agent Pipeline: Implemented
+- ✅ API Backend & Frontend: Implemented
 
 ---
 
@@ -105,26 +105,7 @@ This demonstrates production-ready agent engineering with real-time observabilit
 
 ## 🚀 Quick Setup (Recommended)
 
-Our Taskfile system orchestrates the setup but still expects **manual Azure & Supabase steps**:
-
-```bash
-# Install Task (if you don't have it)
-# macOS: brew install go-task/tap/go-task
-# Linux: curl -Ls https://taskfile.dev/install.sh | sh
-
-# Clone and enter the repo
-git clone <repo-url>
-cd support-copilot
-
-# 1) Configure Supabase project & knowledge base
-task setup-supabase
-
-# 2) Setup backend & frontend
-task setup-app
-
-# 3) Start the system
-task start
-```
+Our Taskfile system orchestrates the setup but still expects **manual Azure & Supabase steps**. The main commands are the same as in the Quick Start above; this section explains what they do.
 
 **What these tasks do:**
 
@@ -136,13 +117,10 @@ task start
 - **`task setup-supabase`**:
   - configures your Supabase project and applies migrations
   - prints Supabase URL and service role key so you can paste them into the root `.env`
-- **`task setup-api`** (in `apps/api`):
-  - creates the Python virtual environment
-  - installs backend dependencies
+- **`task setup-app`**:
+  - creates the Python virtual environment and installs backend dependencies
   - copies the root `.env` into `apps/api/.env`
-- **`task setup-web`** (in `apps/web`):
-  - checks Node.js
-  - installs frontend dependencies
+  - checks Node.js and installs frontend dependencies
 
 **What `task setup-supabase` does:**
 
