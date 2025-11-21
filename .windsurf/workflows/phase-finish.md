@@ -17,3 +17,4 @@ The user suggusts the current phase implementation is done.
 - Update the current phase inside the ROADMAP.md file
 - Commit the all changes
 - Push the branch against remote
+- Create a PR using Github MCP server into to the main branch
