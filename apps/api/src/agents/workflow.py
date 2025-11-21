@@ -19,8 +19,8 @@ class AgentWorkflow:
         self.guard = GuardAgent()
         self.logger = LoggerAgent()
 
-        # Build the workflow graph
-        self.workflow = self._build_workflow()
+        # Build and compile the workflow graph
+        self.compiled_workflow = self._build_workflow()
 
     def _build_workflow(self) -> StateGraph:
         """Build the LangGraph workflow."""
@@ -72,11 +72,14 @@ class AgentWorkflow:
 
     async def process_request(self, request_text: str) -> Dict[str, Any]:
         """Process a support request through the complete agent pipeline."""
+        print("🔄 WORKFLOW: Starting process_request...")
         initial_state = self.create_initial_state(request_text)
+        print("🔄 WORKFLOW: Initial state created, invoking workflow...")
 
         try:
             # Run the workflow
-            final_state = await self.workflow.ainvoke(initial_state)
+            final_state = await self.compiled_workflow.ainvoke(initial_state)
+            print("🔄 WORKFLOW: Workflow completed successfully!")
 
             # Return the response in the expected format
             return {
@@ -107,3 +110,57 @@ class AgentWorkflow:
                     "token_usage": 0
                 }
             }
+
+    def visualize_workflow(self) -> str:
+        """Generate a Mermaid diagram of the workflow."""
+        try:
+            # Get the graph from compiled workflow
+            graph = self.compiled_workflow.get_graph()
+            # Generate Mermaid diagram
+            mermaid_diagram = graph.draw_mermaid()
+            return mermaid_diagram
+        except Exception as e:
+            # Fallback to manual diagram if draw_mermaid fails
+            return self._generate_manual_diagram()
+
+    def _generate_manual_diagram(self) -> str:
+        """Generate manual Mermaid diagram as fallback."""
+        return """
+```mermaid
+graph TD
+    A[Start: Request Text] --> B[Classifier Agent]
+    B --> C[Retriever Agent]
+    C --> D[Writer Agent]
+    D --> E[Guard Agent]
+    E --> F[Logger Agent]
+    F --> G[End: Response]
+    
+    style A fill:#e1f5fe
+    style B fill:#f3e5f5
+    style C fill:#e8f5e8
+    style D fill:#fff3e0
+    style E fill:#ffebee
+    style F fill:#fce4ec
+    style G fill:#e8f5e8
+```
+        """.strip()
+
+    def save_workflow_diagram(self, filename: str = "workflow_diagram.md") -> str:
+        """Save the workflow diagram to a file."""
+        diagram = self.visualize_workflow()
+
+        with open(filename, 'w') as f:
+            f.write("# Agentic Support Copilot Workflow\n\n")
+            f.write(
+                "This diagram shows the sequential flow of agents processing support requests.\n\n")
+            f.write(diagram)
+            f.write("\n\n## Agent Descriptions\n\n")
+            f.write(
+                "1. **Classifier Agent**: Identifies intent, sentiment, and urgency\n")
+            f.write(
+                "2. **Retriever Agent**: Fetches relevant knowledge from the database\n")
+            f.write("3. **Writer Agent**: Generates a grounded response\n")
+            f.write("4. **Guard Agent**: Validates safety and compliance\n")
+            f.write("5. **Logger Agent**: Logs metrics and final evaluation\n")
+
+        return filename

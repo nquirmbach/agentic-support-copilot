@@ -5,30 +5,57 @@ FastAPI backend for the Agentic Support Copilot.
 ## Setup
 
 ```bash
-# Create virtual environment
-python -m venv .venv
-source .venv/bin/activate  # On Windows: .venv\Scripts\activate
+# From the repo root you can run:
+# task setup-app   # sets up backend and frontend
 
-# Install dependencies
-pip install -e ".[dev]"
-
-# Run development server
-uvicorn main:app --reload --host 0.0.0.0 --port 8000
+# Or from this folder (apps/api):
+cd apps/api
+task setup   # create venv, install deps, copy .env
+task start   # start FastAPI on http://localhost:8000
 ```
 
 ## Environment Variables
 
-Create `.env` file:
+Create `.env` file in `apps/api/`:
 
 ```env
-AZURE_OPENAI_ENDPOINT=your_azure_openai_endpoint
-AZURE_OPENAI_API_KEY=your_azure_openai_api_key
-AZURE_OPENAI_API_VERSION=2023-12-01-preview
-AZURE_OPENAI_DEPLOYMENT_NAME=gpt-4
-AZURE_OPENAI_EMBEDDING_DEPLOYMENT_NAME=text-embedding-ada-002
+# OpenAI / Foundry endpoint
+OPENAI_ENDPOINT=your_openai_or_foundry_endpoint_url
+OPENAI_API_KEY=your_openai_or_foundry_api_key
 
+# Chat models
+OPENAI_DEPLOYMENT_NAME=gpt-4o
+OPENAI_FAST_DEPLOYMENT_NAME=gpt-4.1-mini
+
+# Embeddings
+OPENAI_EMBEDDING_DEPLOYMENT_NAME=text-embedding-ada-002
+
+# Supabase
 SUPABASE_URL=your_supabase_url
-SUPABASE_KEY=your_supabase_key
+SUPABASE_SERVICE_KEY=your_service_role_key
+```
+
+## Utility Scripts
+
+From the `apps/api` directory you can run several helper scripts:
+
+```bash
+cd apps/api
+
+# (Re)seed the Supabase knowledge base with sample articles
+python -m scripts.setup_kb
+
+# Clean all documents from the knowledge base
+python -m scripts.clean_kb
+
+# Test Supabase + embeddings (DB connection, retrieval, vector search)
+python -m scripts.test_kb
+
+# Visualize the AgentWorkflow and create the workflow diagram
+python -m scripts.visualize_workflow
+
+# Run the full AgentWorkflow in isolation (without FastAPI)
+python -m scripts.test_workflow
 ```
 
 ## API Documentation

@@ -15,18 +15,7 @@ class WriterAgent:
         """Generate a response based on the request and retrieved knowledge."""
         start_time = time.time()
 
-        system_prompt = """You are a helpful customer support agent. Write a professional, empathetic response to the customer's request.
-
-Guidelines:
-1. Be empathetic and understanding
-2. Provide clear, actionable information
-3. Reference the knowledge sources provided when relevant
-4. If you don't have enough information, suggest next steps
-5. Keep the response concise but comprehensive
-6. Use a professional but friendly tone
-7. Address the specific intent and urgency level
-
-Important: Base your response on the provided knowledge sources. If the sources don't contain relevant information, be honest about limitations and suggest appropriate next steps."""
+        system_prompt = """You are a helpful customer support agent. Write a professional, empathetic response using the provided knowledge sources. Be concise, actionable, and address the customer's specific intent and urgency."""
 
         # Build context from sources
         sources_text = ""

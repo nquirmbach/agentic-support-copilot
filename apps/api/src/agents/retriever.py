@@ -13,9 +13,11 @@ class RetrieverAgent:
 
     async def retrieve(self, state: AgentState) -> AgentState:
         """Retrieve relevant knowledge based on the request."""
+        print("🔍 RETRIEVER AGENT: Starting retrieval...")
         start_time = time.time()
 
         try:
+            print("🔍 RETRIEVER: Calling knowledge base search...")
             # Search for relevant documents
             search_results = await self.kb.search_similar(
                 query=state["request_text"],
@@ -23,14 +25,15 @@ class RetrieverAgent:
                 threshold=0.7
             )
 
-            # Convert to Source format
+            # Convert to Source format (matching models.state.Source)
             sources: List[Source] = []
             for result in search_results:
+                similarity = result.get("similarity", 0.8)
                 source: Source = {
                     "id": result["id"],
                     "title": result["title"],
                     "content": result["content"],
-                    "similarity_score": result.get("similarity", 0.0)
+                    "similarity_score": similarity,
                 }
                 sources.append(source)
 
@@ -44,10 +47,17 @@ class RetrieverAgent:
                 },
                 "output": {
                     "sources_found": len(sources),
-                    "sources": [{"id": s["id"], "title": s["title"], "score": s["similarity_score"]} for s in sources]
+                    "sources": [
+                        {
+                            "id": s["id"],
+                            "title": s["title"],
+                            "score": s["similarity_score"],
+                        }
+                        for s in sources
+                    ],
                 },
                 "duration_ms": int((time.time() - start_time) * 1000),
-                "timestamp": datetime.now().isoformat()
+                "timestamp": datetime.now().isoformat(),
             }
 
             # Update state

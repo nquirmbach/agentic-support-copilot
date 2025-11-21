@@ -7,10 +7,17 @@ This script removes all documents from the knowledge base.
 
 import os
 import sys
+from numpy.core.multiarray import where
 from supabase import create_client, Client
+from dotenv import load_dotenv
+import uuid
 
 # Add parent directory to path for imports
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+# Load .env file
+env_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), ".env")
+load_dotenv(env_path)
 
 
 def create_supabase_client() -> Client:
@@ -42,7 +49,10 @@ def clean_knowledge_base(supabase: Client) -> None:
         print(f"📊 Found {initial_count} documents to remove")
 
         # Delete all documents
-        result = supabase.table("documents").delete().execute()
+
+        zero_uuid = uuid.UUID(int=0)
+        result = supabase.table("documents").delete().neq(
+            "id", zero_uuid).execute()
 
         # Verify cleanup
         count_result = supabase.table("documents").select(

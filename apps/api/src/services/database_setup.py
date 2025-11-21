@@ -15,10 +15,11 @@ def setup_database():
 
     # Initialize Supabase client
     supabase_url = os.getenv("SUPABASE_URL")
-    supabase_key = os.getenv("SUPABASE_KEY")
+    supabase_key = os.getenv("SUPABASE_SERVICE_KEY")
 
     if not supabase_url or not supabase_key:
-        print("Error: SUPABASE_URL and SUPABASE_KEY environment variables must be set")
+        print(
+            "Error: SUPABASE_URL and SUPABASE_SERVICE_KEY environment variables must be set")
         return
 
     client = create_client(supabase_url, supabase_key)

@@ -6,18 +6,30 @@ A modern, agentic AI system that transforms customer support requests into high�
 
 # 🚀 Quick Start
 
-**Get running in 2 minutes with our Taskfile system:**
+**Get running with a guided Taskfile-based setup (with manual Azure & Supabase steps):**
 
 ```bash
-# Clone and setup everything automatically
+# Clone the repo
 git clone <repo-url>
 cd support-copilot
-task setup    # Installs all dependencies with validation
-task setup-supabase    # Configures Supabase project and knowledge base
-task start    # Starts both backend and frontend
+
+# 1) Manually create your Azure AI resource (Azure OpenAI or Azure AI Foundry) and note the endpoint, API key and deployment names
+
+# 2) Configure Supabase project and knowledge base
+task setup-supabase
+
+# 3) Setup backend & frontend dependencies
+task setup-app
+
+# 4) Start both backend and frontend
+task start
 ```
 
-That's it! Your development environment will be ready. Note: The full agentic system is still under development - see TODO.md for current progress.
+During this process you will:
+
+- Use the Azure Portal to create your Azure AI resource (Azure OpenAI or Azure AI Foundry) and configure chat + embedding deployments
+- Edit the root `.env` file with your `OPENAI_*` and `SUPABASE_*` values (see configuration section below)
+- Let `task setup-app` copy the root `.env` into `apps/api/.env`
 
 **Current Status:**
 
@@ -93,27 +105,44 @@ This demonstrates production-ready agent engineering with real-time observabilit
 
 ## 🚀 Quick Setup (Recommended)
 
-Our Taskfile system handles everything automatically:
+Our Taskfile system orchestrates the setup but still expects **manual Azure & Supabase steps**:
 
 ```bash
 # Install Task (if you don't have it)
 # macOS: brew install go-task/tap/go-task
 # Linux: curl -Ls https://taskfile.dev/install.sh | sh
 
-# Clone and setup
+# Clone and enter the repo
 git clone <repo-url>
 cd support-copilot
-task setup    # Validates dependencies and installs everything
-task setup-supabase    # Configures Supabase project and knowledge base
-task start    # Starts both backend and frontend
+
+# 1) Configure Supabase project & knowledge base
+task setup-supabase
+
+# 2) Setup backend & frontend
+task setup-app
+
+# 3) Start the system
+task start
 ```
 
-**What `task setup` does:**
+**What these tasks do:**
 
-- ✅ Validates Python 3.11+ and Node.js availability
-- ✅ Creates virtual environments and installs dependencies
-- ✅ Sets up both backend and frontend automatically
-- ✅ Provides clear error messages with installation guidance
+- **Manual Azure setup (outside Taskfile)**:
+  - in the Azure Portal, create an Azure OpenAI / Azure AI Foundry resource
+  - create chat + embedding deployments
+  - copy the standardized OpenAI-compatible endpoint & API key
+  - edit the root `.env` with `OPENAI_*` values (see below)
+- **`task setup-supabase`**:
+  - configures your Supabase project and applies migrations
+  - prints Supabase URL and service role key so you can paste them into the root `.env`
+- **`task setup-api`** (in `apps/api`):
+  - creates the Python virtual environment
+  - installs backend dependencies
+  - copies the root `.env` into `apps/api/.env`
+- **`task setup-web`** (in `apps/web`):
+  - checks Node.js
+  - installs frontend dependencies
 
 **What `task setup-supabase` does:**
 
@@ -121,8 +150,8 @@ task start    # Starts both backend and frontend
 - 🔗 Links your Supabase project interactively
 - 📊 Extracts project credentials automatically
 - 🗄️ Applies database migrations
-- 📝 Updates environment variables in root .env
-- 🧪 Tests Supabase connection
+- 📝 Prints Supabase URL and service role key for you to copy into the root .env
+- 🧪 (Optional) You can run the provided knowledge base tests afterwards to validate connectivity
 
 **What `task start` does:**
 
@@ -140,10 +169,8 @@ task health     # Check if services are running
 task docs       # Open documentation
 
 # Setup
-task setup      # Install all dependencies
 task setup-supabase  # Configure Supabase project and knowledge base
-task setup-api  # Setup backend only
-task setup-web  # Setup frontend only
+task setup-app  # Setup backend and frontend
 
 # Individual Components
 task start-api  # Start backend only
@@ -182,44 +209,35 @@ npm run dev
 
 ### Required Environment Variables
 
-The `task setup-supabase` command automatically configures Supabase credentials in the root `.env` file. For manual setup, create `.env` in the project root:
+The `task setup-supabase` command helps you retrieve your Supabase credentials; you then add them to the root `.env` file manually. For manual setup without the task, create `.env` in the project root:
 
 ```bash
-# Azure OpenAI (Required for AI features)
-AZURE_OPENAI_ENDPOINT=https://your-resource.openai.azure.com/
-AZURE_OPENAI_API_KEY=your-api-key
-AZURE_OPENAI_API_VERSION=2023-12-01-preview
-AZURE_OPENAI_DEPLOYMENT_NAME=gpt-4o
-AZURE_OPENAI_EMBEDDING_DEPLOYMENT_NAME=text-embedding-ada-002
+# OpenAI-compatible endpoint from Azure AI Foundry (Required for AI features)
+OPENAI_ENDPOINT=https://your-foundry-project.openai.azure.com/
+OPENAI_API_KEY=your-api-key
+
+# Deployment names used by the backend (must match your AI Foundry deployments)
+OPENAI_DEPLOYMENT_NAME=gpt-4o
+OPENAI_FAST_DEPLOYMENT_NAME=gpt-4o-mini
+OPENAI_EMBEDDING_DEPLOYMENT_NAME=text-embedding-3-large
 
 # Supabase (Required for knowledge base - auto-configured by setup-supabase)
 SUPABASE_URL=https://your-project-ref.supabase.co
 SUPABASE_SERVICE_KEY=your-service-role-key
 ```
 
-**Note:** Supabase credentials should be configured automatically by running `task setup-supabase`. The service role key is required for database operations.
+**Note:**
+
+- Supabase credentials must be pasted into the root `.env` file (the `task setup-supabase` task prints the correct values for you).
+- The `OPENAI_*` values must be taken from your Azure AI Foundry project (standardized OpenAI endpoint and deployments).
 
 ### Azure Infrastructure Setup
 
-Deploy required Azure resources:
+This repository no longer provisions Azure resources automatically. You must:
 
-```bash
-cd infra/azure
-task setup    # Validates Azure CLI and Terraform
-task deploy   # Deploys Azure OpenAI resources
-```
-
-**Prerequisites for Azure setup:**
-
-- Azure CLI installed and logged in
-- Terraform installed
-- Appropriate Azure permissions
-
-The infrastructure creates:
-
-- Azure OpenAI Service with GPT-4o deployment
-- Text embedding deployment for RAG+
-- All necessary networking and permissions
+- Create an Azure OpenAI or Azure AI Foundry resource in the Azure Portal
+- Create model deployments (chat + embeddings)
+- Use the resulting endpoint, API key and deployment names in the `OPENAI_*` variables of the root `.env` file
 
 ---
 

@@ -16,7 +16,7 @@ tasks:
       - echo "   1. Install Supabase CLI if needed"
       - echo "   2. Configure your Supabase project"
       - echo "   3. Apply database migrations"
-      - echo "   4. Update environment variables in root .env"
+      - echo "   4. Print Supabase URL and service role key so you can update your root .env manually"
       - echo ""
       - task: setup-cli
       - task: configure-project
@@ -119,30 +119,10 @@ tasks:
           echo "      SUPABASE_SERVICE_KEY=your_service_role_key"
           exit 1
         fi
-
-        echo "📝 Updating environment variables..."
-
-        # Create/update .env file in project root
-        env_file=".env"
-
-        # Update or add environment variables
-        if grep -q "^SUPABASE_URL=" "$env_file" 2>/dev/null; then
-          sed -i.bak "s|^SUPABASE_URL=.*|SUPABASE_URL=$project_url|" "$env_file"
-        else
-          echo "SUPABASE_URL=$project_url" >> "$env_file"
-        fi
-
-        if grep -q "^SUPABASE_SERVICE_KEY=" "$env_file" 2>/dev/null; then
-          sed -i.bak "s|^SUPABASE_SERVICE_KEY=.*|SUPABASE_SERVICE_KEY=$service_key|" "$env_file"
-        else
-          echo "SUPABASE_SERVICE_KEY=$service_key" >> "$env_file"
-        fi
-
-        rm -f "$env_file.bak"
-
-        echo "✅ Environment variables updated in .env"
+        echo ""
+        echo "✅ Supabase project credentials fetched. Please copy these into your root .env file manually:"
         echo "   SUPABASE_URL=$project_url"
-        echo "   SUPABASE_SERVICE_KEY=${service_key:0:20}..."
+        echo "   SUPABASE_SERVICE_KEY=$service_key"
 
   migrate:
     desc: Run database migrations using Supabase CLI

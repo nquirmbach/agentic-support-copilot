@@ -76,13 +76,29 @@ tasks:
           cp "../../.env" ".env"
           echo "✅ Environment variables copied to apps/api/.env"
         else
-          echo "⚠️  Root .env not found. Please run 'task setup-infra' and 'task setup-supabase' first."
+          echo "⚠️  Root .env not found. Please create it in the repository root (see README) and optionally run 'task setup-supabase' to populate Supabase values."
         fi
 
   test:
-    desc: Run tests
+    desc: Run unit tests (fast)
     cmds:
-      - .venv/bin/python -m pytest
+      - .venv/bin/python -m pytest tests/unit/ -v
+
+  test:integration:
+    desc: Run integration tests
+    cmds:
+      - .venv/bin/python -m pytest tests/integration/ -v --tb=short
+
+  test:all:
+    desc: Run all tests (unit + integration)
+    cmds:
+      - task: test
+      - task: test:integration
+
+  test:comprehensive:
+    desc: Run comprehensive test suite with quality report
+    cmds:
+      - .venv/bin/python tests/run_all_tests.py
 
   lint:
     desc: Run linting

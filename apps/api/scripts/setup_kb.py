@@ -14,7 +14,7 @@ import sys
 import json
 from typing import List, Dict
 from supabase import create_client, Client
-from openai import AzureOpenAI
+from openai import OpenAI
 import numpy as np
 from dotenv import load_dotenv
 
@@ -38,12 +38,11 @@ def create_supabase_client() -> Client:
     return create_client(url, key)
 
 
-def create_azure_client() -> AzureOpenAI:
-    """Create Azure OpenAI client from environment variables."""
-    return AzureOpenAI(
-        api_key=os.getenv("AZURE_OPENAI_API_KEY"),
-        api_version=os.getenv("AZURE_OPENAI_API_VERSION"),
-        azure_endpoint=os.getenv("AZURE_OPENAI_ENDPOINT")
+def create_openai_client() -> OpenAI:
+    """Create OpenAI client from environment variables."""
+    return OpenAI(
+        base_url=os.getenv("OPENAI_ENDPOINT"),
+        api_key=os.getenv("OPENAI_API_KEY"),
     )
 
 
@@ -113,15 +112,15 @@ def get_sample_articles() -> List[Dict[str, str]]:
     ]
 
 
-def generate_embeddings(azure_client: AzureOpenAI, texts: List[str]) -> List[List[float]]:
+def generate_embeddings(openai: OpenAI, texts: List[str]) -> List[List[float]]:
     """Generate embeddings for a list of texts using Azure OpenAI."""
     print("🧠 Generating embeddings...")
     embeddings = []
 
     for i, text in enumerate(texts):
         try:
-            response = azure_client.embeddings.create(
-                model=os.getenv("AZURE_OPENAI_EMBEDDING_DEPLOYMENT_NAME"),
+            response = openai.embeddings.create(
+                model=os.getenv("OPENAI_EMBEDDING_DEPLOYMENT_NAME"),
                 input=text
             )
             embedding = response.data[0].embedding
@@ -134,7 +133,7 @@ def generate_embeddings(azure_client: AzureOpenAI, texts: List[str]) -> List[Lis
     return embeddings
 
 
-def seed_knowledge_base(supabase: Client, azure_client: AzureOpenAI) -> None:
+def seed_knowledge_base(supabase: Client, openai: OpenAI) -> None:
     """Seed the knowledge base with sample articles and embeddings."""
     print("📚 Seeding knowledge base...")
 
@@ -150,7 +149,7 @@ def seed_knowledge_base(supabase: Client, azure_client: AzureOpenAI) -> None:
     texts = [article["content"] for article in articles]
 
     # Generate embeddings
-    embeddings = generate_embeddings(azure_client, texts)
+    embeddings = generate_embeddings(openai, texts)
 
     # Insert articles with embeddings
     for i, article in enumerate(articles):
@@ -178,7 +177,7 @@ def main():
     try:
         # Initialize clients
         supabase = create_supabase_client()
-        azure_client = create_azure_client()
+        openai = create_openai_client()
 
         # Check database schema
         if not check_database_schema(supabase):
@@ -186,7 +185,7 @@ def main():
             sys.exit(1)
 
         # Seed knowledge base
-        seed_knowledge_base(supabase, azure_client)
+        seed_knowledge_base(supabase, openai)
 
         print("✅ Knowledge base setup completed successfully!")
         print("🎯 You can now use the vector search functionality.")

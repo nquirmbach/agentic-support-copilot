@@ -13,7 +13,7 @@ Successfully established the monorepo structure for the Agentic Support Copilot 
 ├─ apps/
 │  ├─ api/            # FastAPI backend with multi-agent pipeline
 │  └─ web/            # Vite + React frontend
-├─ infra/             # Local dev scripts (placeholder)
+├─ supabase/          # Supabase configuration and migrations
 ├─ docs/              # Documentation
 ├─ AGENTS.md          # Agent instructions
 ├─ README.md          # Project description
@@ -59,8 +59,8 @@ Successfully established the monorepo structure for the Agentic Support Copilot 
 **Enhanced Setup Automation:**
 
 - ✅ Added comprehensive `task setup-supabase` for interactive Supabase project configuration
-- ✅ Fixed Terraform environment variable output format (JSON → KEY=VALUE)
-- ✅ Implemented automatic `.env` file copying from root to `apps/api/`
+- ✅ Standardized Taskfile workflow for Supabase and local apps (no hidden `.env` generation)
+- ✅ Implemented automatic `.env` file copying from root to `apps/api/` via backend setup Taskfile
 - ✅ Added proper error handling and validation throughout setup pipeline
 - ✅ Resolved Python dotenv loading issues in knowledge base setup script
 
@@ -74,9 +74,9 @@ Successfully established the monorepo structure for the Agentic Support Copilot 
 **Environment Management:**
 
 - ✅ Centralized all credentials in root `.env` file
-- ✅ Automatic distribution to subdirectories (`apps/api/.env`)
+- ✅ Automatic distribution to subdirectories (`apps/api/.env`) via Taskfiles
 - ✅ Corrected `SUPABASE_SERVICE_KEY` usage (instead of `SUPABASE_KEY`)
-- ✅ Fixed Azure OpenAI credential handling
+- ✅ Aligned OpenAI credential handling with standardized `OPENAI_*` variables used by the backend
 
 ## Next Steps
 

@@ -2,6 +2,9 @@
 requires = ["setuptools>=61.0", "wheel"]
 build-backend = "setuptools.build_meta"
 
+[tool.setuptools.packages.find]
+where = ["src"]
+
 [project]
 name = "agentic-support-api"
 version = "0.1.0"
@@ -42,6 +45,11 @@ dev = [
     "mypy>=1.6.0",
     "ruff>=0.1.0",
 ]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]
+addopts = "-p pytest_asyncio"
 
 [tool.black]
 line-length = 88

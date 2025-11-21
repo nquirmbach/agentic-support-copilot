@@ -1,88 +1,54 @@
-# Phase 0 - Feature 0: Infrastructure Prerequisites ✅ COMPLETED
+# Phase 0 - Feature 0: Infrastructure Prerequisites ✅ UPDATED
 
 ## Summary
 
-Successfully implemented Azure OpenAI infrastructure deployment using Terraform to provide the AI services required by the multi-agent system.
+The initial version of this project used Terraform to provision Azure AI Foundry-based infrastructure (hub + project, storage account, and Key Vault). That Terraform-based setup has been removed.
+
+The current approach is:
+
+- Azure resources (Azure OpenAI or Azure AI Foundry) are created **manually** in the Azure Portal.
+- This document now serves as a requirements and guidance reference for what needs to exist in Azure for the Agentic Support Copilot to function.
 
 ## What Was Implemented
 
-### Terraform Infrastructure
+### Required Azure Resources (Manual Setup)
 
-- **main.tf**: Complete Azure OpenAI resource configuration
-- **variables.tf**: Customizable deployment parameters
-- **outputs.tf**: Secure credential extraction and environment variable generation
-- **deploy.sh**: Automated deployment script with validation
-- **destroy.sh**: Cleanup script for resource removal
-- **README.md**: Comprehensive documentation and troubleshooting guide
+- **Azure AI resource**: Either Azure OpenAI or Azure AI Foundry exposing an OpenAI-compatible endpoint
+- **Model deployments**: At least one chat model (e.g. `gpt-4o`, `gpt-4o-mini`) and one embedding model (e.g. `text-embedding-3-large`)
+- **Resource Group**: Container for all Azure resources
+- **(Optional) Storage Account / Key Vault**: If you want to mirror the original architecture, you can add storage and Key Vault for artifacts and secrets, but they are not required by this repo.
 
-### Azure Resources Provisioned
+### How the Backend Uses Azure
 
-- **Resource Group**: `rg-agentic-support-copilot` (configurable)
-- **Azure OpenAI Service**: Main AI service endpoint
-- **GPT-4 Deployment**: Chat completion model for response generation
-- **Text Embedding Deployment**: Vector embeddings for knowledge retrieval
-- **API Keys**: Secure authentication credentials
+- The backend expects an **OpenAI-compatible endpoint** and API key.
+- These are provided via the `OPENAI_ENDPOINT` and `OPENAI_API_KEY` variables in the root `.env` file.
+- Deployment names for chat and embeddings are provided via:
+  - `OPENAI_DEPLOYMENT_NAME`
+  - `OPENAI_FAST_DEPLOYMENT_NAME`
+  - `OPENAI_EMBEDDING_DEPLOYMENT_NAME`
 
-### Automation Features
+### Automation Features (Current State)
 
-- **Environment Variable Generation**: Auto-creates `.env` file with Azure credentials
-- **Validation Scripts**: Checks for Azure CLI and Terraform prerequisites
-- **Interactive Prompts**: Confirmation dialogs for safety
-- **Error Handling**: Comprehensive error checking and user guidance
-- **Cost Awareness**: Documentation of pricing and monitoring
+- No Terraform or Azure IaC is shipped with this repo anymore.
+- Taskfiles only handle **local setup** (backend, frontend, Supabase) and assume Azure has been configured manually.
 
 ## Technical Decisions
 
-1. **Terraform for IaC**: Infrastructure as Code for reproducible deployments
-2. **Local Execution**: Designed for local development and testing
-3. **Secure Outputs**: Sensitive data marked as `sensitive = true` in Terraform
-4. **Modular Design**: Separate files for configuration, variables, and outputs
-5. **Environment Tagging**: Proper Azure resource tagging for cost tracking
+1. **Manual Azure Setup**: Azure resources are managed outside this repo (via Azure Portal, CLI, or an external IaC project).
+2. **Local Execution**: This repo focuses on local development of the multi-agent system.
+3. **Environment-Driven Config**: All Azure integration is configured via environment variables, not Terraform outputs.
 
-## Files Created
+## Historical Note
 
-```
-infra/azure/
-├── main.tf          # Azure OpenAI resource configuration
-├── variables.tf     # Customizable deployment parameters
-├── outputs.tf       # Credential extraction and env vars
-├── deploy.sh        # Automated deployment script
-├── destroy.sh       # Resource cleanup script
-└── README.md        # Complete documentation
-```
+Earlier iterations of this project included an `infra/azure` folder with Terraform configuration and a dedicated Taskfile. Those files have been removed to keep the repo focused on the application itself.
 
-## Usage Instructions
+## Usage Instructions (Manual Azure Setup)
 
-### Quick Deployment
-
-```bash
-cd infra/azure
-chmod +x deploy.sh
-./deploy.sh
-```
-
-### Configure Application
-
-```bash
-# Auto-generated environment variables
-cp azure.env ../../apps/api/.env
-
-# Add Supabase credentials manually
-# Edit ../../apps/api/.env and add SUPABASE_URL and SUPABASE_KEY
-```
-
-### Start Services
-
-```bash
-# Backend
-cd ../../apps/api
-source .venv/bin/activate
-uvicorn src.main:app --reload
-
-# Frontend
-cd ../../apps/web
-npm run dev
-```
+1. In the Azure Portal, create an Azure OpenAI or Azure AI Foundry resource.
+2. Create at least one chat model deployment and one embedding deployment.
+3. Copy the endpoint and API key into the root `.env` as `OPENAI_ENDPOINT` and `OPENAI_API_KEY`.
+4. Set deployment names in `OPENAI_DEPLOYMENT_NAME`, `OPENAI_FAST_DEPLOYMENT_NAME`, and `OPENAI_EMBEDDING_DEPLOYMENT_NAME`.
+5. Follow the root `README.md` to configure Supabase and run the backend/frontend.
 
 ## Cost Considerations
 
@@ -98,13 +64,13 @@ npm run dev
 - Demo mode fallback when Azure credentials not configured
 - No changes required to existing agent code
 
-## Status: ✅ COMPLETED
+## Status: ✅ COMPLETED (MANUAL SETUP)
 
-The Azure OpenAI infrastructure is ready for deployment and provides all necessary AI services for the Agentic Support Copilot. The system can operate in demo mode without Azure resources, or with full functionality when deployed.
+Infrastructure prerequisites are documented and must be created manually in Azure. This repo does not include Terraform or other Azure IaC.
 
 ## Next Steps
 
-1. Deploy Azure infrastructure using `./deploy.sh`
-2. Configure environment variables in `apps/api/.env`
-3. Set up Supabase knowledge base
-4. Test complete end-to-end system
+1. Create or verify required Azure resources (Azure OpenAI / Azure AI Foundry) in the Azure Portal.
+2. Configure environment variables in the root `.env` (and propagate to `apps/api/.env` via `task setup-api`).
+3. Set up the Supabase knowledge base.
+4. Test the complete end-to-end system locally.

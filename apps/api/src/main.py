@@ -62,17 +62,25 @@ async def health_check():
 @app.post("/process", response_model=ProcessResponse)
 async def process_support_request(request: ProcessRequest):
     """Process a support request through the multi-agent pipeline."""
+    print("🚀 FASTAPI: /process endpoint called!")
+    print(f"📝 Request text: '{request.request_text}'")
     try:
+        print("✅ FASTAPI: Starting validation...")
         # Validate input
         if not request.request_text.strip():
             raise HTTPException(
                 status_code=400, detail="Request text cannot be empty")
+        print("✅ FASTAPI: Validation passed, calling workflow...")
 
         # Process request through workflow
         result = await workflow.process_request(request.request_text)
+        print("✅ FASTAPI: Workflow completed!")
 
         return ProcessResponse(**result)
 
+    except HTTPException:
+        # Re-raise HTTP exceptions (like validation errors)
+        raise
     except Exception as e:
         # Log error (in production, you'd use proper logging)
         print(f"Error processing request: {str(e)}")

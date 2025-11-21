@@ -16,36 +16,7 @@ class GuardAgent:
         """Validate the generated response for safety and compliance."""
         start_time = time.time()
 
-        system_prompt = """You are a safety and compliance validator for customer support responses. Analyze the generated response and check for:
-
-1. **Safety Issues**: 
-   - Harmful content
-   - Inappropriate language
-   - Personal information exposure
-   - Security risks
-
-2. **Hallucinations**:
-   - Claims not supported by the provided knowledge sources
-   - Made-up facts or information
-   - Contradictory statements
-
-3. **Policy Compliance**:
-   - Promises that can't be kept
-   - Financial commitments beyond authority
-   - Legal or regulatory issues
-   - Brand guideline violations
-
-4. **Quality Issues**:
-   - Incomplete information
-   - Unclear or confusing language
-   - Missing important context
-
-Return your analysis as a JSON object with these fields:
-- is_safe: boolean (true if response passes all checks)
-- issues: array of strings describing any problems found
-- confidence: number (0-1, how confident you are in this assessment)
-
-If the response is safe, set is_safe to true and an empty issues array. If there are problems, set is_safe to false and describe each issue."""
+        system_prompt = """You are a safety validator for customer support responses. Check for harmful content, hallucinations, policy violations, and quality issues. Return JSON with: is_safe (boolean), issues (array of strings), confidence (0-1)."""
 
         user_prompt = f"""Original Request:
 {state['request_text']}
@@ -62,7 +33,7 @@ Please validate this response:"""
             response = await self.llm.chat([
                 {"role": "system", "content": system_prompt},
                 {"role": "user", "content": user_prompt}
-            ])
+            ], fast=True)
 
             # Parse JSON response
             try:

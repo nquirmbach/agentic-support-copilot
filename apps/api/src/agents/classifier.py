@@ -15,6 +15,7 @@ class ClassifierAgent:
 
     async def classify(self, state: AgentState) -> AgentState:
         """Classify the support request."""
+        print("🏷️  CLASSIFIER AGENT: Starting classification...")
         start_time = time.time()
 
         system_prompt = """You are a support request classifier. Analyze the user's message and classify it into the following categories:
@@ -42,19 +43,22 @@ Return your response as a JSON object with these three fields."""
         user_prompt = f"Please classify this support request:\n\n{state['request_text']}"
 
         try:
+            print("🤖 CLASSIFIER: Calling LLM chat (fast model)...")
             messages = [
-                SystemMessage(content=system_prompt),
-                HumanMessage(content=user_prompt)
-            ]
-
-            response = await self.llm.chat([
                 {"role": "system", "content": system_prompt},
                 {"role": "user", "content": user_prompt}
-            ])
+            ]
+            print(
+                f"📝 CLASSIFIER: Messages prepared (system: {len(system_prompt)} chars, user: {len(user_prompt)} chars)")
+
+            response = await self.llm.chat(messages, fast=True)
+            print(f"✅ CLASSIFIER: LLM response received: {response[:100]}...")
 
             # Parse JSON response
             try:
+                print("🔄 CLASSIFIER: Parsing JSON response...")
                 classification = json.loads(response)
+                print("✅ CLASSIFIER: JSON parsed successfully!")
             except json.JSONDecodeError:
                 # Fallback classification if JSON parsing fails
                 classification = {

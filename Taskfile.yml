@@ -28,16 +28,6 @@ tasks:
     cmds:
       - task start
 
-  setup:
-    desc: Setup all dependencies for the project
-    cmds:
-      - echo "📦 Setting up Agentic Support Copilot..."
-      - task: setup-infra
-      - task: setup-supabase
-      - task: setup-api
-      - task: setup-web
-      - task: seed-kb
-
   setup-supabase:
     desc: Interactive Supabase project setup and configuration
     dir: supabase
@@ -52,34 +42,14 @@ tasks:
       - echo "📚 Seeding knowledge base with sample articles..."
       - python scripts/setup_knowledge_base.py
 
-  setup-api:
-    desc: Setup Python backend dependencies and copy environment variables
-    dir: apps/api
+  setup-app:
+    desc: Setup Python backend dependencies and web frontend
+    dir: apps
     cmds:
       - echo "🔧 Setting up Python backend..."
-      - task setup
-
-  setup-web:
-    desc: Setup Node.js frontend dependencies
-    dir: apps/web
-    cmds:
+      - cd api && task setup
       - echo "🔧 Setting up Node.js frontend..."
-      - task setup
-
-  setup-infra:
-    desc: Deploy Azure infrastructure and configure environment variables
-    dir: infra/azure
-    cmds:
-      - echo "🏗️ Setting up Azure infrastructure..."
-      - task setup
-      - echo ""
-      - echo "📝 Configuring environment variables..."
-      - terraform output -json > /tmp/terraform_output.json
-      - |
-        # Extract environment variables from Terraform output to root .env
-        cat /tmp/terraform_output.json | jq -r '.environment_variables.value | to_entries[] | "\(.key)=\(.value)"' > ../../.env
-      - rm -f /tmp/terraform_output.json
-      - echo "✅ Azure infrastructure deployed and environment variables configured in .env"
+      - cd web && task setup
 
   stop:
     desc: Stop all running services
@@ -120,12 +90,17 @@ tasks:
     desc: Start all apps in development mode with debug logging
     cmds:
       - echo "🐛 Starting in development mode..."
-      - task: dev-api
-      - task: start-web
+      - task --parallel dev-api dev-web
 
   dev-api:
     desc: Start API in development mode
     dir: apps/api
+    cmds:
+      - task dev
+
+  dev-web:
+    desc: Start Web in development mode
+    dir: apps/web
     cmds:
       - task dev
 
@@ -142,7 +117,6 @@ tasks:
       - echo "🧹 Cleaning project..."
       - task: clean-api
       - task: clean-web
-      - task: clean-infra
 
   clean-api:
     desc: Clean Python backend
@@ -153,12 +127,6 @@ tasks:
   clean-web:
     desc: Clean Node.js frontend
     dir: apps/web
-    cmds:
-      - task clean
-
-  clean-infra:
-    desc: Clean Terraform infrastructure
-    dir: infra/azure
     cmds:
       - task clean
 

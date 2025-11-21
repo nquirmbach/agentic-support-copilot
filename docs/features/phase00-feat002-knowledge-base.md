@@ -31,19 +31,19 @@ The Knowledge Base Setup feature provides a complete vector database solution fo
 
 ### Components
 
-**1. Database Schema** (`infra/supabase/migrations/001_setup_schema.sql`)
+**1. Database Schema** (`supabase/migrations/20240101000000_setup_schema.sql`)
 
 - `documents` table with pgvector support
 - `match_documents()` function for similarity search
 - Optimized IVFFlat index for fast vector operations
 
-**2. Setup Script** (`infra/supabase/setup.py`)
+**2. Setup Script** (`apps/api/scripts/setup_kb.py`)
 
 - Automated knowledge base seeding
 - Azure OpenAI integration for embeddings
 - Duplicate detection and error handling
 
-**3. Test Suite** (`infra/supabase/test_search.py`)
+**3. Test Suite** (`apps/api/scripts/test_kb.py`)
 
 - Database connection validation
 - Vector search functionality testing
@@ -73,8 +73,8 @@ CREATE TABLE documents (
 ### Prerequisites
 
 1. **Supabase Account**: Create a free account at [supabase.com](https://supabase.com)
-2. **Azure OpenAI**: Already configured from infrastructure setup
-3. **Project Dependencies**: Completed via `task setup`
+2. **Azure AI Foundry / OpenAI**: Azure AI Foundry hub + project deployed (Feature 000) and model deployments configured
+3. **Project Dependencies**: Backend and frontend dependencies installed via `task setup-api` and `task setup-web`
 
 ### Step 1: Create Supabase Project
 
@@ -86,7 +86,7 @@ CREATE TABLE documents (
 
 1. Open your Supabase dashboard
 2. Navigate to **SQL Editor**
-3. Copy and run the migration from `infra/supabase/migrations/001_setup_schema.sql`
+3. Copy and run the migration from `supabase/migrations/20240101000000_setup_schema.sql`
 
 ```sql
 -- Enable pgvector extension
@@ -130,19 +130,33 @@ USING ivfflat (embedding vector_cosine_ops);
 
 ### Step 3: Configure Environment Variables
 
-Create or update `apps/api/.env` with Supabase credentials:
+Create or update the **root** `.env` file (and then run `task setup-app` to copy it into `apps/api/.env`).
+
+The recommended way to obtain your Supabase credentials is:
+
+1. From the project root, run:
+
+   ```bash
+   task setup-supabase
+   ```
+
+2. At the end of the task, copy the printed `SUPABASE_URL` and `SUPABASE_SERVICE_KEY` values into your root `.env` file using the format below.
+
+3. Finally, run `task setup-app` so the updated `.env` is copied into `apps/api/.env`.
 
 ```bash
 # Supabase Configuration
 SUPABASE_URL=https://your-project-id.supabase.co
 SUPABASE_SERVICE_KEY=your-service-role-key-here
 
-# Azure OpenAI (already configured)
-AZURE_OPENAI_ENDPOINT=https://your-resource.openai.azure.com/
-AZURE_OPENAI_API_KEY=your-api-key
-AZURE_OPENAI_API_VERSION=2023-12-01-preview
-AZURE_OPENAI_DEPLOYMENT_NAME=gpt-4
-AZURE_OPENAI_EMBEDDING_DEPLOYMENT_NAME=text-embedding-ada-002
+# OpenAI-compatible endpoint from Azure AI Foundry
+OPENAI_ENDPOINT=https://your-foundry-project.openai.azure.com/
+OPENAI_API_KEY=your-api-key
+
+# Deployment names (must match your AI Foundry deployments)
+OPENAI_DEPLOYMENT_NAME=gpt-4o
+OPENAI_FAST_DEPLOYMENT_NAME=gpt-4o-mini
+OPENAI_EMBEDDING_DEPLOYMENT_NAME=text-embedding-3-large
 ```
 
 ### Step 4: Seed Knowledge Base
@@ -231,9 +245,9 @@ result = supabase.table("documents").select("id", count="exact").execute()
 print(f"Connected! Found {result.count} documents")
 
 # Test vector search
-from infra.supabase.test_search import test_vector_search, create_azure_client
-azure = create_azure_client()
-test_vector_search(supabase, azure)
+from infra.supabase.test_search import test_vector_search, create_openai_client
+openai = create_openai_client()
+test_vector_search(supabase, openai)
 ```
 
 ## Troubleshooting
@@ -263,13 +277,13 @@ export SUPABASE_URL="https://your-project-id.supabase.co"
 export SUPABASE_SERVICE_KEY="your-service-role-key"
 ```
 
-**4. "Azure OpenAI embedding failed"**
+**4. "OpenAI embedding failed"**
 
 ```bash
-# Solution: Check Azure credentials in .env
-# Verify deployment name exists in Azure
-curl -H "api-key: $AZURE_OPENAI_API_KEY" \
-     "$AZURE_OPENAI_ENDPOINT/openai/deployments?api-version=2023-12-01-preview"
+# Solution: Check OpenAI-compatible credentials in .env
+# Verify deployment name exists in your Azure AI Foundry project
+curl -H "api-key: $OPENAI_API_KEY" \
+     "$OPENAI_ENDPOINT/openai/deployments?api-version=2023-12-01-preview"
 ```
 
 **5. "No search results found"**
@@ -363,14 +377,15 @@ The Knowledge Base Setup is now ready for integration with:
 ## File Structure
 
 ```
-infra/supabase/
+supabase/
 ├── migrations/
-│   └── 001_setup_schema.sql    # Database schema
-├── setup.py                    # Knowledge base seeding
-├── test_search.py              # Test suite
-├── clean.py                    # Cleanup utilities
-├── Taskfile.yml                # Supabase-specific tasks
-└── .env.example                # Environment template
+│   └── 20240101000000_setup_schema.sql    # Database schema
+└── Taskfile.yml                           # Supabase-specific tasks
+
+apps/api/scripts/
+├── setup_kb.py                            # Knowledge base seeding
+├── test_kb.py                             # Test suite
+└── clean_kb.py                            # Cleanup utilities
 ```
 
 ## Status: ✅ COMPLETED

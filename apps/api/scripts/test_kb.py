@@ -13,10 +13,15 @@ import os
 import sys
 from typing import List, Dict
 from supabase import create_client, Client
-from openai import AzureOpenAI
+from openai import OpenAI
+from dotenv import load_dotenv
 
 # Add parent directory to path for imports
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+# Load environment variables from the apps/api/.env file
+env_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), ".env")
+load_dotenv(env_path)
 
 
 def create_supabase_client() -> Client:
@@ -31,12 +36,11 @@ def create_supabase_client() -> Client:
     return create_client(url, key)
 
 
-def create_azure_client() -> AzureOpenAI:
+def create_openai_client() -> OpenAI:
     """Create Azure OpenAI client from environment variables."""
-    return AzureOpenAI(
-        api_key=os.getenv("AZURE_OPENAI_API_KEY"),
-        api_version=os.getenv("AZURE_OPENAI_API_VERSION"),
-        azure_endpoint=os.getenv("AZURE_OPENAI_ENDPOINT")
+    return OpenAI(
+        base_url=os.getenv("OPENAI_ENDPOINT"),
+        api_key=os.getenv("OPENAI_API_KEY")
     )
 
 
@@ -54,7 +58,7 @@ def test_database_connection(supabase: Client) -> bool:
         return False
 
 
-def test_vector_search(supabase: Client, azure_client: AzureOpenAI) -> bool:
+def test_vector_search(supabase: Client, openai: OpenAI) -> bool:
     """Test vector similarity search functionality."""
     print("🔍 Testing vector search...")
 
@@ -63,8 +67,8 @@ def test_vector_search(supabase: Client, azure_client: AzureOpenAI) -> bool:
 
     try:
         # Generate embedding for test query
-        response = azure_client.embeddings.create(
-            model=os.getenv("AZURE_OPENAI_EMBEDDING_DEPLOYMENT_NAME"),
+        response = openai.embeddings.create(
+            model=os.getenv("OPENAI_EMBEDDING_DEPLOYMENT_NAME"),
             input=test_query
         )
         query_embedding = response.data[0].embedding
@@ -137,13 +141,13 @@ def main():
     try:
         # Initialize clients
         supabase = create_supabase_client()
-        azure_client = create_azure_client()
+        openai = create_openai_client()
 
         # Run tests
         tests = [
             ("Database Connection", lambda: test_database_connection(supabase)),
             ("Document Retrieval", lambda: test_document_retrieval(supabase)),
-            ("Vector Search", lambda: test_vector_search(supabase, azure_client)),
+            ("Vector Search", lambda: test_vector_search(supabase, openai)),
         ]
 
         passed = 0
