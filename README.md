@@ -10,8 +10,8 @@ A modern, agentic AI system that transforms customer support requests into highâ
 
 ```bash
 # Clone the repo
-git clone <repo-url>
-cd support-copilot
+git clone https://github.com/nquirmbach/agentic-support-copilot
+cd agentic-support-copilot
 
 # 1) Manually create your Azure AI resource (Azure OpenAI or Azure AI Foundry) and note the endpoint, API key and deployment names
 
