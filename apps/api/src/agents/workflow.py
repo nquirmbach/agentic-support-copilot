@@ -1,12 +1,18 @@
+import asyncio
 from datetime import datetime
-from typing import Dict, Any
+from typing import Dict, Any, Callable, Awaitable
 from langgraph.graph import StateGraph, END
+from langgraph.types import RetryPolicy
 from ..models.state import AgentState
 from ..agents.classifier import ClassifierAgent
 from ..agents.retriever import RetrieverAgent
 from ..agents.writer import WriterAgent
 from ..agents.guard import GuardAgent
 from ..agents.logger import LoggerAgent
+from ..config import (
+    AGENT_MAX_RETRIES,
+    AGENT_STEP_TIMEOUT_SECONDS,
+)
 
 
 class AgentWorkflow:
@@ -22,16 +28,56 @@ class AgentWorkflow:
         # Build and compile the workflow graph
         self.compiled_workflow = self._build_workflow()
 
+    def _wrap_agent(
+        self,
+        agent_name: str,
+        step_name: str,
+        func: Callable[[AgentState], Awaitable[AgentState]],
+    ) -> Callable[[AgentState], Awaitable[AgentState]]:
+        async def wrapped(state: AgentState) -> AgentState:
+            return await asyncio.wait_for(
+                func(state), timeout=AGENT_STEP_TIMEOUT_SECONDS
+            )
+
+        return wrapped
+
     def _build_workflow(self) -> StateGraph:
         """Build the LangGraph workflow."""
         workflow = StateGraph(AgentState)
 
-        # Add nodes for each agent
-        workflow.add_node("classify", self.classifier.classify)
-        workflow.add_node("retrieve", self.retriever.retrieve)
-        workflow.add_node("write", self.writer.write_response)
-        workflow.add_node("validate", self.guard.validate_response)
-        workflow.add_node("log", self.logger.log_and_evaluate)
+        # Add nodes for each agent with LangGraph retry policy and timeout handling
+        retry_policy = RetryPolicy(max_attempts=AGENT_MAX_RETRIES)
+
+        workflow.add_node(
+            "classify",
+            self._wrap_agent("ClassifierAgent", "classify",
+                             self.classifier.classify),
+            retry_policy=retry_policy,
+        )
+        workflow.add_node(
+            "retrieve",
+            self._wrap_agent("RetrieverAgent", "retrieve",
+                             self.retriever.retrieve),
+            retry_policy=retry_policy,
+        )
+        workflow.add_node(
+            "write",
+            self._wrap_agent("WriterAgent", "write",
+                             self.writer.write_response),
+            retry_policy=retry_policy,
+        )
+        workflow.add_node(
+            "validate",
+            self._wrap_agent("GuardAgent", "validate",
+                             self.guard.validate_response),
+            retry_policy=retry_policy,
+        )
+        workflow.add_node(
+            "log",
+            self._wrap_agent("LoggerAgent", "log",
+                             self.logger.log_and_evaluate),
+            retry_policy=retry_policy,
+        )
 
         # Define the flow
         workflow.set_entry_point("classify")

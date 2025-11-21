@@ -3,6 +3,8 @@ from datetime import datetime
 from typing import Dict, Any
 from ..models.state import AgentState, AgentStep
 from ..models.llm import get_llm_provider
+from ..prompts import WRITER_SYSTEM_PROMPT
+from ..logging_config import get_logger
 
 
 class WriterAgent:
@@ -10,12 +12,13 @@ class WriterAgent:
 
     def __init__(self):
         self.llm = get_llm_provider()
+        self.logger = get_logger("writer")
 
     async def write_response(self, state: AgentState) -> AgentState:
         """Generate a response based on the request and retrieved knowledge."""
         start_time = time.time()
 
-        system_prompt = """You are a helpful customer support agent. Write a professional, empathetic response using the provided knowledge sources. Be concise, actionable, and address the customer's specific intent and urgency."""
+        system_prompt = WRITER_SYSTEM_PROMPT
 
         # Build context from sources
         sources_text = ""
@@ -43,6 +46,7 @@ Please write a helpful response:"""
                 {"role": "system", "content": system_prompt},
                 {"role": "user", "content": user_prompt}
             ])
+            self.logger.info("WriterAgent: response generated")
 
             # Create trace step
             step: AgentStep = {

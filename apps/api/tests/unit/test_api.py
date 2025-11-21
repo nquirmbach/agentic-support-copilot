@@ -118,7 +118,9 @@ class TestProcessEndpoint:
 
         assert response.status_code == 400
         data = response.json()
-        assert "Request text cannot be empty" in data["detail"]
+        assert isinstance(data["detail"], dict)
+        assert data["detail"]["code"] == "EMPTY_REQUEST_TEXT"
+        assert "Request text cannot be empty" in data["detail"]["message"]
 
     def test_process_request_whitespace_only(self, client):
         """Test process endpoint rejects whitespace-only text."""
@@ -126,7 +128,9 @@ class TestProcessEndpoint:
 
         assert response.status_code == 400
         data = response.json()
-        assert "Request text cannot be empty" in data["detail"]
+        assert isinstance(data["detail"], dict)
+        assert data["detail"]["code"] == "EMPTY_REQUEST_TEXT"
+        assert "Request text cannot be empty" in data["detail"]["message"]
 
     def test_process_request_missing_field(self, client):
         """Test process endpoint rejects missing request_text field."""
@@ -148,7 +152,9 @@ class TestProcessEndpoint:
 
         assert response.status_code == 500
         data = response.json()
-        assert "An error occurred while processing your request" in data["detail"]
+        assert isinstance(data["detail"], dict)
+        assert data["detail"]["code"] == "WORKFLOW_ERROR"
+        assert "An error occurred while processing your request" in data["detail"]["message"]
 
 
 class TestCORSConfiguration:

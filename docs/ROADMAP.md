@@ -46,6 +46,12 @@ It outlines phases from a minimal MVP to a robust agentic AI platform aligned wi
 - Add small UI to view KB entries
 - Add ability to disable low-scoring snippets (RAG+ threshold tuning)
 
+### Orchestration & Observability (.NET Aspire)
+
+- Introduce a .NET Aspire App Host to orchestrate the web frontend, FastAPI API, and supporting services for local development.
+- Configure an Aspire dashboard to collect logs and basic telemetry from all services in one place.
+- Align the local dev workflow so the full stack is started and observed via Aspire rather than separate ad‑hoc commands.
+
 **Outcome:** MVP feels stable and pleasant to use.
 
 ---

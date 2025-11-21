@@ -3,6 +3,7 @@ from datetime import datetime
 from typing import Dict, Any, List
 from ..models.state import AgentState, AgentStep, Source
 from ..services.knowledge_base import KnowledgeBase
+from ..logging_config import get_logger
 
 
 class RetrieverAgent:
@@ -10,14 +11,15 @@ class RetrieverAgent:
 
     def __init__(self):
         self.kb = KnowledgeBase()
+        self.logger = get_logger("retriever")
 
     async def retrieve(self, state: AgentState) -> AgentState:
         """Retrieve relevant knowledge based on the request."""
-        print("🔍 RETRIEVER AGENT: Starting retrieval...")
+        self.logger.info("RetrieverAgent: starting retrieval")
         start_time = time.time()
 
         try:
-            print("🔍 RETRIEVER: Calling knowledge base search...")
+            self.logger.info("RetrieverAgent: calling knowledge base search")
             # Search for relevant documents
             search_results = await self.kb.search_similar(
                 query=state["request_text"],

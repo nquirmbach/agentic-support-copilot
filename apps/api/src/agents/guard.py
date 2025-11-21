@@ -4,6 +4,8 @@ from datetime import datetime
 from typing import Dict, Any, List
 from ..models.state import AgentState, AgentStep
 from ..models.llm import get_llm_provider
+from ..prompts import GUARD_SYSTEM_PROMPT
+from ..logging_config import get_logger
 
 
 class GuardAgent:
@@ -11,12 +13,13 @@ class GuardAgent:
 
     def __init__(self):
         self.llm = get_llm_provider()
+        self.logger = get_logger("guard")
 
     async def validate_response(self, state: AgentState) -> AgentState:
         """Validate the generated response for safety and compliance."""
         start_time = time.time()
 
-        system_prompt = """You are a safety validator for customer support responses. Check for harmful content, hallucinations, policy violations, and quality issues. Return JSON with: is_safe (boolean), issues (array of strings), confidence (0-1)."""
+        system_prompt = GUARD_SYSTEM_PROMPT
 
         user_prompt = f"""Original Request:
 {state['request_text']}
@@ -34,6 +37,7 @@ Please validate this response:"""
                 {"role": "system", "content": system_prompt},
                 {"role": "user", "content": user_prompt}
             ], fast=True)
+            self.logger.info("GuardAgent: validation response received")
 
             # Parse JSON response
             try:

@@ -5,6 +5,8 @@ from typing import Dict, Any
 from langchain_core.messages import HumanMessage, SystemMessage
 from ..models.state import AgentState, AgentStep
 from ..models.llm import get_llm_provider
+from ..prompts import CLASSIFIER_SYSTEM_PROMPT
+from ..logging_config import get_logger
 
 
 class ClassifierAgent:
@@ -12,53 +14,33 @@ class ClassifierAgent:
 
     def __init__(self):
         self.llm = get_llm_provider()
+        self.logger = get_logger("classifier")
 
     async def classify(self, state: AgentState) -> AgentState:
         """Classify the support request."""
-        print("🏷️  CLASSIFIER AGENT: Starting classification...")
+        self.logger.info("ClassifierAgent: starting classification")
         start_time = time.time()
 
-        system_prompt = """You are a support request classifier. Analyze the user's message and classify it into the following categories:
-
-1. **Intent**: What type of support request is this?
-   - "technical_issue" - Problems with software/hardware functionality
-   - "billing_inquiry" - Questions about payments, subscriptions, refunds
-   - "general_question" - General information requests
-   - "feature_request" - Suggestions for new features
-   - "complaint" - Expressions of dissatisfaction
-   - "account_issue" - Problems with login, access, or account settings
-
-2. **Sentiment**: What is the emotional tone?
-   - "positive" - Happy, satisfied, pleased
-   - "neutral" - Factual, informational, calm
-   - "negative" - Angry, frustrated, disappointed
-
-3. **Urgency**: How quickly does this need attention?
-   - "high" - Critical issue, blocking functionality, urgent
-   - "medium" - Important but not blocking, needs timely response
-   - "low" - General inquiry, can wait for standard response
-
-Return your response as a JSON object with these three fields."""
+        system_prompt = CLASSIFIER_SYSTEM_PROMPT
 
         user_prompt = f"Please classify this support request:\n\n{state['request_text']}"
 
         try:
-            print("🤖 CLASSIFIER: Calling LLM chat (fast model)...")
+            self.logger.info("ClassifierAgent: calling LLM (fast model)")
             messages = [
                 {"role": "system", "content": system_prompt},
                 {"role": "user", "content": user_prompt}
             ]
-            print(
-                f"📝 CLASSIFIER: Messages prepared (system: {len(system_prompt)} chars, user: {len(user_prompt)} chars)")
+            self.logger.info(
+                "ClassifierAgent: messages prepared",
+            )
 
             response = await self.llm.chat(messages, fast=True)
-            print(f"✅ CLASSIFIER: LLM response received: {response[:100]}...")
+            self.logger.info("ClassifierAgent: LLM response received")
 
             # Parse JSON response
             try:
-                print("🔄 CLASSIFIER: Parsing JSON response...")
                 classification = json.loads(response)
-                print("✅ CLASSIFIER: JSON parsed successfully!")
             except json.JSONDecodeError:
                 # Fallback classification if JSON parsing fails
                 classification = {

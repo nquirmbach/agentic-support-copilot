@@ -3,6 +3,7 @@ import asyncio
 from typing import List, Dict, Any, Optional
 from supabase import create_client, Client
 from ..models.llm import get_llm_provider
+from ..logging_config import get_logger
 
 
 class KnowledgeBase:
@@ -12,6 +13,7 @@ class KnowledgeBase:
         self.supabase_url = os.getenv("SUPABASE_URL")
         self.supabase_key = os.getenv("SUPABASE_SERVICE_KEY")
         self.llm = get_llm_provider()
+        self.logger = get_logger("knowledge_base")
 
         # Initialize Supabase client
         if not self.supabase_url or not self.supabase_key:
@@ -26,14 +28,14 @@ class KnowledgeBase:
 
     async def search_similar(self, query: str, limit: int = 5, threshold: float = 0.7) -> List[Dict[str, Any]]:
         """Search for similar documents using vector similarity."""
-        print("📚 KB: search_similar() called...")
+        self.logger.info("KnowledgeBase: search_similar called")
 
         try:
-            print("📚 KB: Generating embedding...")
+            self.logger.info("KnowledgeBase: generating embedding")
             # Generate embedding for query
             embeddings = await self.llm.embed([query])
             query_embedding = embeddings[0]
-            print("📚 KB: Embedding generated successfully!")
+            self.logger.info("KnowledgeBase: embedding generated successfully")
 
             # Run synchronous Supabase call in thread pool to avoid blocking
             def _search():
@@ -53,13 +55,12 @@ class KnowledgeBase:
                 return []
 
         except Exception as e:
-            print(f"Knowledge base search failed: {str(e)}")
+            self.logger.exception("KnowledgeBase: search_similar failed")
             return []
 
     async def add_document(self, title: str, content: str) -> Optional[str]:
         """Add a new document to the knowledge base."""
         if self.demo_mode:
-            print(f"Demo mode: Would add document '{title}' to knowledge base")
             return f"demo-{hash(title) % 10000}"
 
         try:
@@ -83,7 +84,7 @@ class KnowledgeBase:
                 return None
 
         except Exception as e:
-            print(f"Failed to add document: {str(e)}")
+            self.logger.exception("KnowledgeBase: failed to add document")
             return None
 
     def get_all_documents(self) -> List[Dict[str, Any]]:
@@ -106,5 +107,5 @@ class KnowledgeBase:
             response = self.client.table('documents').select('*').execute()
             return response.data if response.data else []
         except Exception as e:
-            print(f"Failed to get documents: {str(e)}")
+            self.logger.exception("KnowledgeBase: failed to get documents")
             return []

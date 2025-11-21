@@ -7,6 +7,7 @@ from datetime import datetime
 
 from .agents.workflow import AgentWorkflow
 from .models.state import Source, AgentStep, Metrics
+from .logging_config import setup_logging, get_logger, set_request_id
 
 
 class ProcessRequest(BaseModel):
@@ -22,11 +23,24 @@ class ProcessResponse(BaseModel):
     metrics: Metrics
 
 
+class ErrorDetail(BaseModel):
+    code: str
+    message: str
+
+
+class ErrorResponse(BaseModel):
+    error: ErrorDetail
+
+
 class HealthResponse(BaseModel):
     """Health check response model."""
     status: str
     timestamp: str
     version: str
+
+
+setup_logging()
+logger = get_logger("api")
 
 
 # Initialize FastAPI app
@@ -62,19 +76,27 @@ async def health_check():
 @app.post("/process", response_model=ProcessResponse)
 async def process_support_request(request: ProcessRequest):
     """Process a support request through the multi-agent pipeline."""
-    print("🚀 FASTAPI: /process endpoint called!")
-    print(f"📝 Request text: '{request.request_text}'")
+    request_id = set_request_id()
+    logger.info("FASTAPI /process called", extra={"request_id": request_id})
     try:
-        print("✅ FASTAPI: Starting validation...")
+        logger.info("FASTAPI validation started",
+                    extra={"request_id": request_id})
         # Validate input
         if not request.request_text.strip():
             raise HTTPException(
-                status_code=400, detail="Request text cannot be empty")
-        print("✅ FASTAPI: Validation passed, calling workflow...")
+                status_code=400,
+                detail={
+                    "code": "EMPTY_REQUEST_TEXT",
+                    "message": "Request text cannot be empty",
+                },
+            )
+        logger.info("FASTAPI validation passed, invoking workflow",
+                    extra={"request_id": request_id})
 
         # Process request through workflow
         result = await workflow.process_request(request.request_text)
-        print("✅ FASTAPI: Workflow completed!")
+        logger.info("FASTAPI workflow completed",
+                    extra={"request_id": request_id})
 
         return ProcessResponse(**result)
 
@@ -82,13 +104,15 @@ async def process_support_request(request: ProcessRequest):
         # Re-raise HTTP exceptions (like validation errors)
         raise
     except Exception as e:
-        # Log error (in production, you'd use proper logging)
-        print(f"Error processing request: {str(e)}")
+        logger.exception("FASTAPI workflow error", extra={
+                         "request_id": request_id})
 
-        # Return a more user-friendly error
         raise HTTPException(
             status_code=500,
-            detail="An error occurred while processing your request. Please try again."
+            detail={
+                "code": "WORKFLOW_ERROR",
+                "message": "An error occurred while processing your request. Please try again.",
+            },
         )
 
 
