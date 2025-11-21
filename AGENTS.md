@@ -38,6 +38,7 @@ Agents must generate and maintain code in this structure:
 │  ├─ web/            # Vite + React frontend
 │  └─ api/            # FastAPI backend (agent orchestration)
 ├─ infra/             # Local dev scripts (optional)
+├─ supabase/          # Supabase setup and migrations
 ├─ docs/              # Documentation
 │  ├─ CONTEXT.md      # Business & product context
 │  └─ ROADMAP.md      # Project roadmap

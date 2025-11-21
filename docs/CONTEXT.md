@@ -40,6 +40,40 @@ User flow:
 
 ---
 
+# 🔄 Multi-Agent Workflow
+
+The system uses a **sequential multi-agent pipeline** orchestrated by LangGraph:
+
+```mermaid
+graph TD;
+    __start__ --> classify;
+    classify --> retrieve;
+    retrieve --> write;
+    write --> validate;
+    validate --> log;
+    log --> __end__;
+
+    style __start__ fill:#e1f5fe
+    style classify fill:#f3e5f5
+    style retrieve fill:#e8f5e8
+    style write fill:#fff3e0
+    style validate fill:#ffebee
+    style log fill:#fce4ec
+    style __end__ fill:#e8f5e8
+```
+
+## Agent Pipeline Details:
+
+1. **Classifier Agent** - Identifies intent, sentiment, and urgency from the request
+2. **Retriever Agent** - Searches the knowledge base for relevant information using vector embeddings
+3. **Writer Agent** - Generates a grounded response using retrieved knowledge
+4. **Guard Agent** - Validates response for safety, hallucinations, and policy compliance
+5. **Logger Agent** - Captures metrics, latency, and final evaluation
+
+**Performance:** ~8-15 seconds per request with real Azure OpenAI API calls
+
+---
+
 # 👤 Target User
 
 Primary target user:

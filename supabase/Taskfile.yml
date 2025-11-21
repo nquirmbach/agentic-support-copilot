@@ -1,0 +1,154 @@
+version: "3"
+
+tasks:
+  default:
+    desc: List all available tasks
+    cmds:
+      - task --list
+
+  setup:
+    desc: Interactive Supabase project setup and configuration
+    cmds:
+      - echo "🚀 Interactive Supabase Setup"
+      - echo "=================================="
+      - echo ""
+      - echo "📋 This setup will:"
+      - echo "   1. Install Supabase CLI if needed"
+      - echo "   2. Configure your Supabase project"
+      - echo "   3. Apply database migrations"
+      - echo "   4. Print Supabase URL and service role key so you can update your root .env manually"
+      - echo ""
+      - task: setup-cli
+      - task: configure-project
+      - task: migrate
+      - echo ""
+      - echo "🎉 Supabase setup completed successfully!"
+      - echo "📋 Your project is linked and configured!"
+      - echo "💡 Run 'task seed-kb' to populate the knowledge base"
+      - echo "💡 Run 'task start' from project root to start the application"
+
+  setup-cli:
+    desc: Install and configure Supabase CLI
+    cmds:
+      - echo "🔧 Setting up Supabase CLI..."
+      - |
+        if ! command -v supabase &> /dev/null; then
+          echo "📦 Installing Supabase CLI..."
+          # macOS
+          if [[ "$OSTYPE" == "darwin"* ]]; then
+            brew install supabase/tap/supabase
+          # Linux
+          else
+            curl -L https://github.com/supabase/cli/releases/latest/download/supabase_linux_amd64.tar.gz | tar xz
+            sudo mv supabase /usr/local/bin/
+          fi
+        else
+          echo "✅ Supabase CLI already installed"
+        fi
+      - supabase --version
+
+  configure-project:
+    desc: Configure Supabase project using CLI interactive selection
+    dir: ../
+    cmds:
+      - echo "🔗 Configuring Supabase project..."
+      - echo ""
+      - echo "📋 Using Supabase CLI for secure project selection"
+      - echo ""
+      - echo "🔐 Checking authentication status..."
+      - |
+        if supabase projects list >/dev/null 2>&1; then
+          echo "✅ Already authenticated with Supabase"
+        else
+          echo "🔐 Authentication required. Let's log in..."
+          supabase login
+        fi
+      - echo ""
+      - echo "📋 Linking to your Supabase project..."
+      - echo "💡 The CLI will show your available projects and prompt you to select one"
+      - echo ""
+      - |
+        # Check if project is already linked
+        if [ -f "supabase/config.toml" ] && grep -q "project_id" "supabase/config.toml"; then
+          echo "✅ Project already linked. Using existing configuration."
+        else
+          echo "🔗 No project linked. Linking to your Supabase project..."
+          echo "💡 The CLI will show your available projects and prompt you to select one"
+          supabase link
+        fi
+
+        # Get project name from config, then find reference ID from projects list
+        project_name=$(cat supabase/config.toml 2>/dev/null | grep -o 'project_id = "[^"]*"' | cut -d'"' -f2)
+
+        if [ -z "$project_name" ]; then
+          echo "❌ Failed to extract project name from config"
+          echo "💡 Please ensure the project is properly linked"
+          exit 1
+        fi
+
+        echo "🔍 Found project name: $project_name"
+
+        # Get project reference ID from projects list using partial name matching
+        echo "🔍 Looking up project reference ID..."
+        project_ref=$(supabase projects list -o json 2>/dev/null | jq -r ".[] | select(.name | contains(\"$(echo $project_name | sed 's/agentic-//')\")) | .id")
+
+        if [ -z "$project_ref" ] || [ "$project_ref" = "null" ]; then
+          echo "❌ Failed to find project reference ID for project: $project_name"
+          echo "💡 Please ensure the project exists and you have access to it"
+          exit 1
+        fi
+
+        echo "🔍 Found project reference: $project_ref"
+
+        # Get API URL and service key from remote project
+        echo "🔍 Fetching project credentials..."
+        project_url="https://$project_ref.supabase.co"
+
+        # Get service role key using projects API command with JSON output
+        echo "🔍 Fetching service role key..."
+        service_key=$(supabase projects api-keys --project-ref "$project_ref" -o json 2>/dev/null | jq -r '.[] | select(.name == "service_role") | .api_key')
+
+        if [ -z "$service_key" ]; then
+          echo "❌ Failed to extract service role key"
+          echo "💡 Please ensure you have the correct permissions"
+          echo "📋 Alternatively, get your credentials from:"
+          echo "   1. Supabase Dashboard → Settings → API"
+          echo "   2. Copy the Project URL and service_role key"
+          echo "   3. Add them manually to your .env file:"
+          echo "      SUPABASE_URL=https://$project_ref.supabase.co"
+          echo "      SUPABASE_SERVICE_KEY=your_service_role_key"
+          exit 1
+        fi
+        echo ""
+        echo "✅ Supabase project credentials fetched. Please copy these into your root .env file manually:"
+        echo "   SUPABASE_URL=$project_url"
+        echo "   SUPABASE_SERVICE_KEY=$service_key"
+
+  migrate:
+    desc: Run database migrations using Supabase CLI
+    dir: ../
+    cmds:
+      - echo "🚀 Running database migrations..."
+      - supabase db push
+      - echo "✅ Migrations applied successfully!"
+
+  test-connection:
+    desc: Test Supabase connection and vector search
+    dir: ../apps/api
+    cmds:
+      - echo "🧪 Testing Supabase connection..."
+      - task test-kb
+
+  test:
+    desc: Test vector search functionality (delegates to API scripts)
+    dir: ../apps/api
+    cmds:
+      - echo "🧪 Testing vector search..."
+      - task test-kb
+
+  clean:
+    desc: Clean all documents from knowledge base (delegates to API scripts)
+    dir: ../apps/api
+    cmds:
+      - echo "🧹 Cleaning knowledge base..."
+      - task clean-kb
